@@ -17,7 +17,6 @@ import {
   ArrowUpRight,
   Clock,
   BarChart2, 
-  Settings,
   Square,
   Download,
   MoreVertical
@@ -196,8 +195,9 @@ export default function App() {
   });
   
   // Settings & Thresholds
-  const [psiApiKey, setPsiApiKey] = useState(() => localStorage.getItem('psi_api_key') || '');
-  const [thresholds, setThresholds] = useState<ThresholdConfig>(() => {
+  const [thresholds] = useState<ThresholdConfig>(() => {
+    // We still load from local storage to persist user preference if they had it, 
+    // but the UI to change it is removed as requested.
     const saved = localStorage.getItem('speedmonitor_thresholds');
     return saved ? JSON.parse(saved) : { lcp: 2.5, cls: 0.1, score: 90 };
   });
@@ -207,7 +207,6 @@ export default function App() {
   const [activeSiteTab, setActiveSiteTab] = useState<{ [key: string]: 'desktop' | 'mobile' }>({});
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isArticleOpen, setIsArticleOpen] = useState(false);
   const [newUrl, setNewUrl] = useState('');
   const [urlError, setUrlError] = useState('');
@@ -233,22 +232,7 @@ export default function App() {
     localStorage.setItem('speedmonitor_sites', JSON.stringify(sites));
   }, [sites]);
 
-  useEffect(() => {
-    localStorage.setItem('speedmonitor_thresholds', JSON.stringify(thresholds));
-  }, [thresholds]);
-
   // Logic
-  const saveSettings = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (psiApiKey.trim()) {
-      localStorage.setItem('psi_api_key', psiApiKey.trim());
-    } else {
-      localStorage.removeItem('psi_api_key');
-    }
-    // Thresholds are already updated in state, useEffect handles persistence
-    setIsSettingsOpen(false);
-  };
-
   const addSite = (e: React.FormEvent) => {
     e.preventDefault();
     setUrlError('');
@@ -642,9 +626,9 @@ export default function App() {
                       </div>
                       <p className="text-xs text-red-600 font-medium mb-2">Failed</p>
                       {activeData.error?.toLowerCase().includes('quota') ? (
-                         <button onClick={(e) => { e.stopPropagation(); setIsSettingsOpen(true); }} className="text-xs text-blue-600 hover:underline">
-                           Check API Key
-                         </button>
+                         <span className="text-xs text-slate-500">
+                           Quota exceeded. Try again later.
+                         </span>
                       ) : (
                         <p className="text-[10px] text-slate-400 truncate px-4">{activeData.error}</p>
                       )}
@@ -892,16 +876,7 @@ export default function App() {
              <button onClick={() => setIsArticleOpen(true)} className="text-xs text-slate-500 hover:text-blue-600 font-medium hidden sm:block">
                About Tool
              </button>
-             <a href="https://developers.google.com/speed/docs/insights/v5/get-started" target="_blank" rel="noreferrer" className="text-xs text-slate-400 hover:text-blue-600 transition-colors hidden sm:block">
-               Powered by Google PSI
-             </a>
-             <button 
-               onClick={() => setIsSettingsOpen(true)}
-               className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 rounded-lg transition-colors"
-               title="Settings"
-             >
-               <Settings className="w-5 h-5" />
-             </button>
+             {/* Removed Powered by Google PSI and Settings button as requested */}
           </div>
         </div>
       </nav>
@@ -970,98 +945,6 @@ export default function App() {
                   className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium shadow-sm transition-colors"
                 >
                   Start Monitoring
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Settings Modal */}
-      {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h2 className="text-lg font-bold text-slate-900">Settings</h2>
-              <button onClick={() => setIsSettingsOpen(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={saveSettings} className="p-6 space-y-6">
-              
-              {/* API Key Section */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">PageSpeed API Key</label>
-                <div className="text-xs text-slate-500 mb-2">
-                   Optional: Provide key to increase quota. 
-                   <a href="https://developers.google.com/speed/docs/insights/v5/get-started#key" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline ml-1">
-                     Get key
-                   </a>
-                </div>
-                <input 
-                  type="password" 
-                  placeholder="API Key..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                  value={psiApiKey}
-                  onChange={(e) => setPsiApiKey(e.target.value)}
-                />
-              </div>
-
-              {/* Thresholds Section */}
-              <div className="border-t border-slate-100 pt-4">
-                <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-slate-500" />
-                  Performance Thresholds
-                </h3>
-                <p className="text-xs text-slate-500 mb-3">Alert if performance drops below:</p>
-                
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Score &lt;</label>
-                    <input 
-                      type="number" 
-                      min="0" max="100"
-                      className="w-full px-2 py-2 border border-slate-300 rounded-lg text-sm"
-                      value={thresholds.score}
-                      onChange={(e) => setThresholds({...thresholds, score: Number(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">LCP &gt; (s)</label>
-                    <input 
-                      type="number" 
-                      step="0.1"
-                      className="w-full px-2 py-2 border border-slate-300 rounded-lg text-sm"
-                      value={thresholds.lcp}
-                      onChange={(e) => setThresholds({...thresholds, lcp: Number(e.target.value)})}
-                    />
-                  </div>
-                   <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">CLS &gt;</label>
-                    <input 
-                      type="number" 
-                      step="0.01"
-                      className="w-full px-2 py-2 border border-slate-300 rounded-lg text-sm"
-                      value={thresholds.cls}
-                      onChange={(e) => setThresholds({...thresholds, cls: Number(e.target.value)})}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2 flex gap-3">
-                 <button 
-                  type="button" 
-                  onClick={() => setIsSettingsOpen(false)}
-                  className="flex-1 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-sm transition-colors"
-                >
-                  Save Settings
                 </button>
               </div>
             </form>

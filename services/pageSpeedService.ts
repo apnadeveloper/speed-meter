@@ -1,6 +1,7 @@
 import { PageSpeedResult, Metric } from '../types';
 
 const PSI_API_ENDPOINT = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
+const PSI_API_KEY = 'AIzaSyBKn9g-K9xC1kaLamJ1zUn_PoRsU38dnww';
 
 export const runPageSpeedCheck = async (url: string, device: 'mobile' | 'desktop' = 'desktop', signal?: AbortSignal): Promise<PageSpeedResult> => {
   try {
@@ -11,12 +12,9 @@ export const runPageSpeedCheck = async (url: string, device: 'mobile' | 'desktop
     params.append('category', 'ACCESSIBILITY');
     params.append('category', 'BEST_PRACTICES');
     params.append('category', 'SEO');
-
-    // Check for a user-provided PageSpeed API key in localStorage
-    const storedKey = localStorage.getItem('psi_api_key');
-    if (storedKey) {
-      params.append('key', storedKey);
-    }
+    
+    // Use the hardcoded API key for all requests
+    params.append('key', PSI_API_KEY);
 
     const response = await fetch(`${PSI_API_ENDPOINT}?${params.toString()}`, { signal });
 
@@ -26,7 +24,7 @@ export const runPageSpeedCheck = async (url: string, device: 'mobile' | 'desktop
       let errorMessage = errorData?.error?.message || `Failed to fetch PageSpeed data: ${response.statusText}`;
       
       if (response.status === 429 || errorMessage.toLowerCase().includes('quota')) {
-        errorMessage = "Daily quota exceeded. Please add a free PageSpeed API Key in Settings to continue.";
+        errorMessage = "Daily quota exceeded. Please try again later.";
       }
 
       throw new Error(errorMessage);
