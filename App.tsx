@@ -17,7 +17,8 @@ import {
   BarChart2, 
   Square,
   Download,
-  AlertTriangle
+  AlertTriangle,
+  LayoutDashboard
 } from './components/Icons';
 import { Site, PageSpeedResult, StrategyData, Metric, ThresholdConfig, AuditItem } from './types';
 import { runPageSpeedCheck } from './services/pageSpeedService';
@@ -133,29 +134,46 @@ const AuditSnippet: React.FC<{ details: any }> = ({ details }) => {
   if (!details || !details.items || details.items.length === 0) return null;
 
   return (
-    <div className="mt-3 space-y-2">
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Failing Elements:</p>
-      <div className="bg-slate-900 rounded-lg p-3 overflow-x-auto">
-        <div className="space-y-3">
-          {details.items.slice(0, 10).map((item: any, idx: number) => {
-            const node = item.node;
-            if (!node) return null;
-            return (
-              <div key={idx} className="border-b border-slate-800 last:border-0 pb-2 last:pb-0">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] text-blue-400 font-mono truncate max-w-[70%]">{node.selector}</span>
-                  {item.explanation && <span className="text-[10px] text-amber-400 italic">{item.explanation}</span>}
-                </div>
-                <code className="text-xs text-slate-300 block whitespace-pre break-all bg-slate-800/50 p-1.5 rounded border border-slate-700">
-                  {node.snippet || node.nodeLabel || 'No snippet available'}
-                </code>
+    <div className="mt-4 space-y-3">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="h-px flex-1 bg-slate-200"></div>
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Failing Elements</span>
+        <div className="h-px flex-1 bg-slate-200"></div>
+      </div>
+      <div className="space-y-3">
+        {details.items.slice(0, 5).map((item: any, idx: number) => {
+          const node = item.node;
+          if (!node) return null;
+          return (
+            <div key={idx} className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden flex flex-col">
+              <div className="px-3 py-1.5 bg-slate-100 border-b border-slate-200 flex justify-between items-center">
+                <span className="text-[10px] font-mono text-blue-700 truncate max-w-[80%]">{node.selector}</span>
+                {item.explanation && (
+                  <span className="text-[10px] text-amber-600 font-medium px-1.5 py-0.5 bg-amber-50 rounded border border-amber-100">
+                    {item.explanation}
+                  </span>
+                )}
               </div>
-            );
-          })}
-          {details.items.length > 10 && (
-            <p className="text-[10px] text-slate-500 text-center">...and {details.items.length - 10} more items</p>
-          )}
-        </div>
+              <div className="p-3 space-y-2">
+                {node.nodeLabel && (
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Visible Content</span>
+                    <p className="text-xs text-slate-800 font-medium">{node.nodeLabel}</p>
+                  </div>
+                )}
+                <div>
+                   <span className="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">HTML Snippet</span>
+                   <code className="text-[11px] text-pink-600 block whitespace-pre-wrap break-all bg-white p-2 rounded border border-slate-200 font-mono leading-relaxed">
+                    {node.snippet || 'No snippet available'}
+                  </code>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {details.items.length > 5 && (
+          <p className="text-[10px] text-slate-400 text-center font-medium italic pb-1">...and {details.items.length - 5} more elements need improvement</p>
+        )}
       </div>
     </div>
   );
@@ -571,7 +589,7 @@ export default function App() {
                       <h4 className="font-semibold text-slate-900 text-sm">{audit.title}</h4>
                       {audit.displayValue && <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded whitespace-nowrap">{audit.displayValue}</span>}
                     </div>
-                    <p className="text-sm text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: audit.description.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:underline">$1</a>') }} />
+                    <p className="text-sm text-slate-600 leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: audit.description.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:underline">$1</a>') }} />
                     
                     {/* Render specific snippets/failing elements for the user to identify issues */}
                     <AuditSnippet details={audit.details} />
@@ -621,6 +639,24 @@ export default function App() {
            <div className="bg-white border border-slate-200 rounded-xl p-12 text-center"><div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4"><Activity className="w-8 h-8" /></div><h3 className="text-lg font-semibold text-slate-900">No Data Available</h3><p className="text-slate-500 mt-2 mb-6">Run an audit to see performance metrics for this device strategy.</p><button onClick={() => runCheck(selectedSite.id, selectedSite.url, [activeTab])} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">Run Audit</button></div>
         ) : (
           <>
+            {/* Visual Page Preview */}
+            {activeData.lastRun?.screenshot && (
+              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-4">
+                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+                   <Globe className="w-4 h-4" />
+                   Page Preview
+                </h3>
+                <div className="rounded-lg overflow-hidden border border-slate-100 bg-slate-50 flex justify-center p-4">
+                   <img 
+                     src={activeData.lastRun.screenshot} 
+                     alt="Page Screenshot" 
+                     className="max-h-[350px] w-auto shadow-2xl rounded-sm"
+                   />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-3 text-center italic">Screenshot of the page as rendered during the analysis.</p>
+              </div>
+            )}
+
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
                 {isLoading && <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>}
                 <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-6">Audits Summary</h3>
@@ -645,7 +681,9 @@ export default function App() {
                   <MetricCard metric={activeData.lastRun.metrics.cls} onClick={() => setSelectedMetric(activeData.lastRun!.metrics.cls)} />
                   <MetricCard metric={activeData.lastRun.metrics.tbt} onClick={() => setSelectedMetric(activeData.lastRun!.metrics.tbt)} />
                   <MetricCard metric={activeData.lastRun.metrics.si} onClick={() => setSelectedMetric(activeData.lastRun!.metrics.si)} />
-                  <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-center text-slate-400 border-dashed"><span className="text-xs font-medium uppercase tracking-wider">Lighthouse Metrics</span></div>
+                  <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-center text-slate-400 border-dashed text-center">
+                    <span className="text-[10px] font-bold uppercase tracking-widest leading-tight">Click Metrics for Detailed Breakdown</span>
+                  </div>
                 </>
               )}
             </div>
@@ -666,8 +704,15 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
       <nav className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2"><div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white"><Zap className="w-5 h-5 fill-current" /></div><span className="font-bold text-xl tracking-tight text-slate-900">Speed <span className="text-blue-600">Meter</span></span></div>
-          <div className="flex items-center gap-4"><button onClick={() => setIsArticleOpen(true)} className="text-xs text-slate-500 hover:text-blue-600 font-medium hidden sm:block">About Tool</button></div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+              <Zap className="w-5 h-5 fill-current" />
+            </div>
+            <span className="font-bold text-xl tracking-tight text-slate-900">Speed <span className="text-blue-600">Meter</span></span>
+          </div>
+          <div className="flex items-center gap-4">
+            <button onClick={() => setIsArticleOpen(true)} className="text-xs text-slate-500 hover:text-blue-600 font-medium hidden sm:block">About Tool</button>
+          </div>
         </div>
       </nav>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">{view === 'dashboard' ? renderDashboard() : renderDetail()}</main>
@@ -691,7 +736,7 @@ export default function App() {
                <div className="p-6 border-b border-slate-100 flex justify-between items-center"><div className="flex items-center gap-3"><h2 className="text-xl font-bold text-slate-900">{selectedMetric.title}</h2><span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${selectedMetric.score >= 0.9 ? 'bg-emerald-100 text-emerald-700' : selectedMetric.score >= 0.5 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>{selectedMetric.score >= 0.9 ? 'Good' : selectedMetric.score >= 0.5 ? 'Needs Improvement' : 'Poor'}</span></div><button onClick={() => setSelectedMetric(null)} className="text-slate-400 hover:text-slate-600"><X className="w-6 h-6" /></button></div>
                <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
                   <div className="flex items-center justify-center py-6 bg-slate-50 rounded-xl border border-slate-100"><div className="text-center"><span className="block text-4xl font-bold text-slate-900 mb-1">{selectedMetric.displayValue}</span><span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Current Value</span></div></div>
-                  {selectedMetric.description && <div className="text-slate-600 leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: selectedMetric.description.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:underline">$1</a>') }} />}
+                  {selectedMetric.description && <div className="text-slate-600 leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: selectedMetric.description.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:underline font-bold">$1</a>') }} />}
                </div>
             </div>
          </div>
