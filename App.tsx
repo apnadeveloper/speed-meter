@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { 
   LayoutDashboard, 
   Plus, 
@@ -286,6 +286,7 @@ export default function App() {
     setUrlError('');
     setIsAddModalOpen(false);
     
+    // Default to desktop tab
     setActiveSiteTab(prev => ({ ...prev, [newSite.id]: 'desktop' }));
     runCheck(newSite.id, formattedUrl);
   };
@@ -454,15 +455,27 @@ export default function App() {
     }
   };
 
-  const toggleTab = (siteId: string, tab: 'desktop' | 'mobile', e?: React.MouseEvent) => {
+  // Optimize Tab Switching Logic
+  const toggleTab = useCallback((siteId: string, tab: 'desktop' | 'mobile', e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setActiveSiteTab(prev => ({ ...prev, [siteId]: tab }));
-  };
+    setActiveSiteTab(prev => {
+        // Prevent re-render if the tab is already active
+        if (prev[siteId] === tab) return prev;
+        return { ...prev, [siteId]: tab };
+    });
+  }, []);
 
-  const getActiveTab = (siteId: string) => activeSiteTab[siteId] || 'desktop';
+  const getActiveTab = useCallback((siteId: string) => activeSiteTab[siteId] || 'desktop', [activeSiteTab]);
 
-  const filteredSites = sites.filter(s => s.url.toLowerCase().includes(searchQuery.toLowerCase()));
-  const selectedSite = sites.find(s => s.id === selectedSiteId);
+  // Memoize Filtered Sites to prevent re-filtering on every render
+  const filteredSites = useMemo(() => 
+    sites.filter(s => s.url.toLowerCase().includes(searchQuery.toLowerCase())),
+  [sites, searchQuery]);
+
+  // Memoize Selected Site
+  const selectedSite = useMemo(() => 
+    sites.find(s => s.id === selectedSiteId),
+  [sites, selectedSiteId]);
 
   // --- Render Sections ---
 
