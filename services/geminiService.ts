@@ -1,8 +1,16 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { PageSpeedResult, GeminiAnalysis } from "../types";
 
+// Safely retrieve API key to prevent runtime crashes in browser environments
+const getApiKey = () => {
+  if (typeof process !== 'undefined' && process.env) {
+    return process.env.API_KEY || '';
+  }
+  return '';
+};
+
 // Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
 export const analyzePerformance = async (url: string, result: PageSpeedResult): Promise<GeminiAnalysis> => {
   try {
