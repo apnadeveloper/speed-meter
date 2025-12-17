@@ -1,16 +1,9 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { PageSpeedResult, GeminiAnalysis } from "../types";
 
-// Safely retrieve API key to prevent runtime crashes in browser environments
-const getApiKey = () => {
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env.API_KEY || '';
-  }
-  return '';
-};
-
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: getApiKey() });
+// Initialize Gemini Client using the environment variable directly as per SDK guidelines
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const analyzePerformance = async (url: string, result: PageSpeedResult): Promise<GeminiAnalysis> => {
   try {
@@ -38,9 +31,9 @@ export const analyzePerformance = async (url: string, result: PageSpeedResult): 
       3. Priority.
     `;
 
+    // Using gemini-3-flash-preview for text analysis tasks as per guidelines
     const response = await ai.models.generateContent({
-      // Switch to Flash Lite for lower latency
-      model: 'gemini-flash-lite-latest',
+      model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -91,8 +84,9 @@ export const getMetricExplanation = async (metricName: string, value: string, sc
       Keep it professional, concise, and formatted in Markdown.
     `;
 
+    // Using gemini-3-flash-preview for optimal latency on explanation tasks
     const response = await ai.models.generateContent({
-      model: 'gemini-flash-lite-latest',
+      model: 'gemini-3-flash-preview',
       contents: prompt,
     });
 

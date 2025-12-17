@@ -1,4 +1,4 @@
-import { PageSpeedResult, Metric } from '../types';
+import { PageSpeedResult, Metric, AuditItem } from '../types';
 
 const PSI_API_ENDPOINT = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
 const PSI_API_KEY = 'AIzaSyBKn9g-K9xC1kaLamJ1zUn_PoRsU38dnww';
@@ -43,6 +43,25 @@ export const runPageSpeedCheck = async (url: string, device: 'mobile' | 'desktop
       description: audits[auditKey].description,
     });
 
+    const getFailedAudits = (categoryKey: string): AuditItem[] => {
+      const category = categories[categoryKey];
+      if (!category) return [];
+      
+      return category.auditRefs
+        .filter((ref: any) => ref.weight > 0)
+        .map((ref: any) => {
+          const audit = audits[ref.id];
+          return {
+            id: ref.id,
+            title: audit.title,
+            description: audit.description,
+            score: audit.score,
+            displayValue: audit.displayValue,
+          };
+        })
+        .filter((audit: AuditItem) => audit.score !== null && audit.score < 0.9);
+    };
+
     const performanceScore = Math.round((categories.performance?.score || 0) * 100);
 
     const result: PageSpeedResult = {
@@ -54,6 +73,12 @@ export const runPageSpeedCheck = async (url: string, device: 'mobile' | 'desktop
         accessibility: Math.round((categories.accessibility?.score || 0) * 100),
         bestPractices: Math.round((categories['best-practices']?.score || 0) * 100),
         seo: Math.round((categories.seo?.score || 0) * 100),
+      },
+      categoryAudits: {
+        performance: getFailedAudits('performance'),
+        accessibility: getFailedAudits('accessibility'),
+        bestPractices: getFailedAudits('best-practices'),
+        seo: getFailedAudits('seo'),
       },
       metrics: {
         fcp: extractMetric('first-contentful-paint'),

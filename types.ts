@@ -6,6 +6,14 @@ export interface Metric {
   description?: string;
 }
 
+export interface AuditItem {
+  id: string;
+  title: string;
+  description: string;
+  score: number | null;
+  displayValue?: string;
+}
+
 export interface PageSpeedResult {
   id: string; // unique ID for this run
   timestamp: string;
@@ -15,6 +23,12 @@ export interface PageSpeedResult {
     accessibility: number;
     bestPractices: number;
     seo: number;
+  };
+  categoryAudits: {
+    performance: AuditItem[];
+    accessibility: AuditItem[];
+    bestPractices: AuditItem[];
+    seo: AuditItem[];
   };
   metrics: {
     fcp: Metric;

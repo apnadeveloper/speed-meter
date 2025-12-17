@@ -1,3 +1,4 @@
+
 import { 
   Activity, 
   BarChart2, 
@@ -19,7 +20,9 @@ import {
   X,
   Settings,
   Square,
-  Download
+  Download,
+  // Added missing AlertTriangle icon
+  AlertTriangle
 } from 'lucide-react';
 
 export {
@@ -43,5 +46,7 @@ export {
   X,
   Settings,
   Square,
-  Download
+  Download,
+  // Exported missing AlertTriangle icon
+  AlertTriangle
 };
