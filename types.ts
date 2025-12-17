@@ -12,6 +12,7 @@ export interface AuditItem {
   description: string;
   score: number | null;
   displayValue?: string;
+  details?: any; // Stores the detailed items/table from Lighthouse
 }
 
 export interface PageSpeedResult {

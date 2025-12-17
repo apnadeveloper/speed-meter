@@ -57,6 +57,7 @@ export const runPageSpeedCheck = async (url: string, device: 'mobile' | 'desktop
             description: audit.description,
             score: audit.score,
             displayValue: audit.displayValue,
+            details: audit.details, // This contains the specific nodes/elements that failed
           };
         })
         .filter((audit: AuditItem) => audit.score !== null && audit.score < 0.9);

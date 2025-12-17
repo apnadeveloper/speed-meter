@@ -128,6 +128,39 @@ const Notification: React.FC<{ message: string; type: 'success' | 'warning'; onC
   );
 };
 
+// Component to render code snippets/nodes from Lighthouse
+const AuditSnippet: React.FC<{ details: any }> = ({ details }) => {
+  if (!details || !details.items || details.items.length === 0) return null;
+
+  return (
+    <div className="mt-3 space-y-2">
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Failing Elements:</p>
+      <div className="bg-slate-900 rounded-lg p-3 overflow-x-auto">
+        <div className="space-y-3">
+          {details.items.slice(0, 10).map((item: any, idx: number) => {
+            const node = item.node;
+            if (!node) return null;
+            return (
+              <div key={idx} className="border-b border-slate-800 last:border-0 pb-2 last:pb-0">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] text-blue-400 font-mono truncate max-w-[70%]">{node.selector}</span>
+                  {item.explanation && <span className="text-[10px] text-amber-400 italic">{item.explanation}</span>}
+                </div>
+                <code className="text-xs text-slate-300 block whitespace-pre break-all bg-slate-800/50 p-1.5 rounded border border-slate-700">
+                  {node.snippet || node.nodeLabel || 'No snippet available'}
+                </code>
+              </div>
+            );
+          })}
+          {details.items.length > 10 && (
+            <p className="text-[10px] text-slate-500 text-center">...and {details.items.length - 10} more items</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- Main App Component ---
 
 export default function App() {
@@ -539,6 +572,9 @@ export default function App() {
                       {audit.displayValue && <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded whitespace-nowrap">{audit.displayValue}</span>}
                     </div>
                     <p className="text-sm text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: audit.description.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:underline">$1</a>') }} />
+                    
+                    {/* Render specific snippets/failing elements for the user to identify issues */}
+                    <AuditSnippet details={audit.details} />
                   </div>
                 ))}
               </div>
@@ -609,7 +645,7 @@ export default function App() {
                   <MetricCard metric={activeData.lastRun.metrics.cls} onClick={() => setSelectedMetric(activeData.lastRun!.metrics.cls)} />
                   <MetricCard metric={activeData.lastRun.metrics.tbt} onClick={() => setSelectedMetric(activeData.lastRun!.metrics.tbt)} />
                   <MetricCard metric={activeData.lastRun.metrics.si} onClick={() => setSelectedMetric(activeData.lastRun!.metrics.si)} />
-                  <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-center text-slate-400 border-dashed"><span className="text-xs font-medium uppercase tracking-wider">Metric Detail View</span></div>
+                  <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-center text-slate-400 border-dashed"><span className="text-xs font-medium uppercase tracking-wider">Lighthouse Metrics</span></div>
                 </>
               )}
             </div>
