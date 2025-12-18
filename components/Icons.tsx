@@ -21,8 +21,9 @@ import {
   Settings,
   Square,
   Download,
-  // Added missing AlertTriangle icon
-  AlertTriangle
+  AlertTriangle,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 export {
@@ -47,6 +48,7 @@ export {
   Settings,
   Square,
   Download,
-  // Exported missing AlertTriangle icon
-  AlertTriangle
+  AlertTriangle,
+  Sun,
+  Moon
 };
